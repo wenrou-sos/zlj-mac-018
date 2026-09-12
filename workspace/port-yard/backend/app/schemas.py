@@ -1,0 +1,125 @@
+from pydantic import BaseModel, Field
+from datetime import datetime
+from typing import Optional
+import re
+
+
+class VesselIn(BaseModel):
+    vessel_name: str
+    voyage: str
+    eta: datetime
+    etd: datetime
+    status: str = "SCHEDULED"
+
+
+class VesselOut(VesselIn):
+    id: int
+    class Config:
+        from_attributes = True
+
+
+class ContainerIn(BaseModel):
+    container_no: str = Field(..., min_length=11, max_length=11)
+    size: str = "40"
+    ctype: str = "GP"
+    vessel_id: Optional[int] = None
+    weight_t: float = 0
+    consignee: str = ""
+    free_days: int = 7
+
+    @classmethod
+    def validate_no(cls, v):
+        return v
+
+
+class ContainerOut(BaseModel):
+    id: int
+    container_no: str
+    size: str
+    ctype: str
+    status: str
+    vessel_id: Optional[int]
+    position_id: Optional[int]
+    position_code: Optional[str] = None
+    vessel_name: Optional[str] = None
+    weight_t: float
+    consignee: str
+    free_days: int
+    in_time: Optional[datetime]
+    out_time: Optional[datetime]
+    has_hold: bool
+    overdue: bool = False
+    days_in_yard: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+
+class AppointmentIn(BaseModel):
+    container_no: str
+    vessel_id: Optional[int] = None
+    planned_time: datetime
+    truck_no: str = ""
+
+
+class AppointmentOut(BaseModel):
+    id: int
+    container_no: str
+    vessel_id: Optional[int]
+    planned_time: datetime
+    truck_no: str
+    status: str
+    created_at: datetime
+    class Config:
+        from_attributes = True
+
+
+class GateInRequest(BaseModel):
+    container_no: str
+    truck_no: str = ""
+    driver: str = ""
+    gate: str = "G1"
+
+
+class GateOutRequest(BaseModel):
+    container_no: str
+    truck_no: str = ""
+    driver: str = ""
+    gate: str = "G1"
+    pickup_no: Optional[str] = None   # 提箱单号(模拟校验)
+
+
+class GateRecordOut(BaseModel):
+    id: int
+    container_id: int
+    container_no: str = ""
+    direction: str
+    truck_no: str
+    driver: str
+    gate: str
+    time: datetime
+    result: str
+    remark: str
+    class Config:
+        from_attributes = True
+
+
+class YardPositionOut(BaseModel):
+    id: int
+    block: str
+    bay: int
+    row: int
+    tier: int
+    occupied: bool
+    code: str
+    container_no: Optional[str] = None
+    class Config:
+        from_attributes = True
+
+
+CONTAINER_NO_RE = re.compile(r"^[A-Z]{4}\d{7}$")
+
+
+def valid_container_no(no: str) -> bool:
+    """ISO 6346 简单格式校验: 4位箱主代码 + 7位数字"""
+    return bool(CONTAINER_NO_RE.match(no.upper()))
