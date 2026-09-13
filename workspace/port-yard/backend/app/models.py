@@ -58,7 +58,7 @@ class Container(Base):
     in_time = Column(DateTime, nullable=True)
     out_time = Column(DateTime, nullable=True)
     has_hold = Column(Boolean, default=False)    # 海关/查验扣箱
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
 
     vessel = relationship("Vessel", back_populates="containers")
     position = relationship("YardPosition", back_populates="container")
@@ -74,7 +74,7 @@ class GateRecord(Base):
     truck_no = Column(String(16), default="")
     driver = Column(String(32), default="")
     gate = Column(String(8), default="G1")
-    time = Column(DateTime, default=datetime.utcnow)
+    time = Column(DateTime, default=datetime.now)
     result = Column(String(16), default="OK")       # OK / REJECTED
     remark = Column(String(128), default="")
 
@@ -90,6 +90,6 @@ class Appointment(Base):
     planned_time = Column(DateTime, nullable=False)
     truck_no = Column(String(16), default="")
     status = Column(String(16), default="PENDING")  # PENDING/COMPLETED/CANCELLED
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
 
     vessel = relationship("Vessel")

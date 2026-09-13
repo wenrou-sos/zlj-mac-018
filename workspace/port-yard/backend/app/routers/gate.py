@@ -40,17 +40,27 @@ def gate_in(req: GateInRequest, db: Session = Depends(get_db)):
         db.commit()
         raise HTTPException(403, "进闸拒绝：无有效进场预约")
 
-    # 自动分配堆位
-    pos = allocate_position(db)
-    if not pos:
-        _record(db, c, "IN", req.truck_no, req.driver, req.gate, "REJECTED", "堆场已满")
-        db.commit()
-        raise HTTPException(409, "进闸拒绝：堆场已满")
-
-    pos.occupied = True
-    c.position_id = pos.id
+    # 堆位: 已有预分配则沿用，否则自动分配
+    if c.position_id:
+        pos = c.position
+        if not pos:  # 数据异常兜底: 堆位记录缺失
+            pos = allocate_position(db)
+            if not pos:
+                _record(db, c, "IN", req.truck_no, req.driver, req.gate, "REJECTED", "堆场已满")
+                db.commit()
+                raise HTTPException(409, "进闸拒绝：堆场已满")
+            c.position_id = pos.id
+        pos.occupied = True
+    else:
+        pos = allocate_position(db)
+        if not pos:
+            _record(db, c, "IN", req.truck_no, req.driver, req.gate, "REJECTED", "堆场已满")
+            db.commit()
+            raise HTTPException(409, "进闸拒绝：堆场已满")
+        pos.occupied = True
+        c.position_id = pos.id
     c.status = ContainerStatus.IN_YARD.value
-    c.in_time = datetime.utcnow()
+    c.in_time = datetime.now()
     appt.status = "COMPLETED"
     rec = _record(db, c, "IN", req.truck_no, req.driver, req.gate, "OK",
                   f"分配堆位 {pos.code}")
@@ -85,7 +95,7 @@ def gate_out(req: GateOutRequest, db: Session = Depends(get_db)):
     pos_code = c.position.code if c.position else ""
     c.position_id = None
     c.status = ContainerStatus.OUT.value
-    c.out_time = datetime.utcnow()
+    c.out_time = datetime.now()
     rec = _record(db, c, "OUT", req.truck_no, req.driver, req.gate, "OK",
                   f"提箱单 {req.pickup_no}，释放堆位 {pos_code}")
     db.commit()

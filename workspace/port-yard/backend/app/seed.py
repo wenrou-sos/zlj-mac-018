@@ -15,7 +15,7 @@ def seed():
         db.close()
         return
 
-    now = datetime.utcnow()
+    now = datetime.now()
 
     # 1. 堆场: A/B/C 三个区, 每区 6排 x 4列 x 3层 = 72 位
     positions = []

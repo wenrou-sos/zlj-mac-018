@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api/containers", tags=["集装箱"])
 
 
 def to_out(c: Container) -> dict:
-    now = datetime.utcnow()
+    now = datetime.now()
     days = (now - c.in_time).days if c.in_time and c.status == ContainerStatus.IN_YARD.value else None
     overdue = bool(c.in_time and c.status == ContainerStatus.IN_YARD.value
                    and now > c.in_time + timedelta(days=c.free_days))
@@ -40,7 +40,7 @@ def list_containers(status: Optional[str] = None, q: Optional[str] = None,
 @router.get("/overdue", response_model=List[ContainerOut])
 def overdue_containers(db: Session = Depends(get_db)):
     """超期箱提醒: 在场且超过免堆存天数"""
-    now = datetime.utcnow()
+    now = datetime.now()
     containers = db.query(Container).filter(Container.status == ContainerStatus.IN_YARD.value).all()
     return [to_out(c) for c in containers
             if c.in_time and now > c.in_time + timedelta(days=c.free_days)]

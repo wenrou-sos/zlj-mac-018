@@ -11,15 +11,17 @@ router = APIRouter(prefix="/api/dashboard", tags=["看板"])
 
 @router.get("")
 def dashboard(db: Session = Depends(get_db)):
-    now = datetime.utcnow()
+    now = datetime.now()
     in_yard = db.query(Container).filter(Container.status == ContainerStatus.IN_YARD.value).all()
     overdue = [c for c in in_yard if c.in_time and now > c.in_time + timedelta(days=c.free_days)]
     total_pos = db.query(func.count(YardPosition.id)).scalar()
     used_pos = db.query(func.count(YardPosition.id)).filter(YardPosition.occupied == True).scalar()  # noqa: E712
     today_in = db.query(func.count(GateRecord.id)).filter(
-        GateRecord.direction == "IN", GateRecord.time >= now.replace(hour=0, minute=0, second=0)).scalar()
+        GateRecord.direction == "IN", GateRecord.result == "OK",
+        GateRecord.time >= now.replace(hour=0, minute=0, second=0)).scalar()
     today_out = db.query(func.count(GateRecord.id)).filter(
-        GateRecord.direction == "OUT", GateRecord.time >= now.replace(hour=0, minute=0, second=0)).scalar()
+        GateRecord.direction == "OUT", GateRecord.result == "OK",
+        GateRecord.time >= now.replace(hour=0, minute=0, second=0)).scalar()
     return {
         "in_yard": len(in_yard),
         "overdue": len(overdue),
