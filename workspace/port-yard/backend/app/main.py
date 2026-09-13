@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .database import Base, engine
+from .database import Base, engine, run_migrations
 from .seed import seed
 from .routers import vessels, containers, yard, gate, appointments, dashboard
 
 Base.metadata.create_all(bind=engine)
+run_migrations()
 seed()
 
 app = FastAPI(title="港口集装箱堆场管理系统", version="1.0.0")

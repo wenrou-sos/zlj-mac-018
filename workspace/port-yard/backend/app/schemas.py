@@ -1,7 +1,14 @@
-from pydantic import BaseModel, Field
-from datetime import datetime
+from pydantic import BaseModel, Field, field_validator
+from datetime import datetime, timezone
 from typing import Optional
 import re
+
+
+def to_naive_utc(v):
+    """带时区的时间统一转为 naive UTC，与数据库时间戳口径一致"""
+    if isinstance(v, datetime) and v.tzinfo is not None:
+        return v.astimezone(timezone.utc).replace(tzinfo=None)
+    return v
 
 
 class VesselIn(BaseModel):
@@ -10,6 +17,11 @@ class VesselIn(BaseModel):
     eta: datetime
     etd: datetime
     status: str = "SCHEDULED"
+
+    @field_validator("eta", "etd")
+    @classmethod
+    def _utc(cls, v):
+        return to_naive_utc(v)
 
 
 class VesselOut(VesselIn):
@@ -62,10 +74,20 @@ class AppointmentIn(BaseModel):
     tolerance_hours: int = 2
     truck_no: str = ""
 
+    @field_validator("planned_time")
+    @classmethod
+    def _utc(cls, v):
+        return to_naive_utc(v)
+
 
 class RescheduleIn(BaseModel):
     planned_time: datetime
     tolerance_hours: Optional[int] = None
+
+    @field_validator("planned_time")
+    @classmethod
+    def _utc(cls, v):
+        return to_naive_utc(v)
 
 
 class AppointmentOut(BaseModel):

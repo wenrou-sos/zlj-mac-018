@@ -40,7 +40,7 @@ def gate_in(req: GateInRequest, db: Session = Depends(get_db)):
         db.commit()
         raise HTTPException(403, "进闸拒绝：无有效进场预约")
 
-    now = datetime.now()
+    now = datetime.utcnow()
     win_start = appt.planned_time - timedelta(hours=appt.tolerance_hours)
     win_end = appt.planned_time + timedelta(hours=appt.tolerance_hours)
     fmt = "%m-%d %H:%M"
@@ -75,7 +75,7 @@ def gate_in(req: GateInRequest, db: Session = Depends(get_db)):
         pos.occupied = True
         c.position_id = pos.id
     c.status = ContainerStatus.IN_YARD.value
-    c.in_time = datetime.now()
+    c.in_time = datetime.utcnow()
     appt.status = "COMPLETED"
     rec = _record(db, c, "IN", req.truck_no, req.driver, req.gate, "OK",
                   f"分配堆位 {pos.code}")
@@ -110,7 +110,7 @@ def gate_out(req: GateOutRequest, db: Session = Depends(get_db)):
     pos_code = c.position.code if c.position else ""
     c.position_id = None
     c.status = ContainerStatus.OUT.value
-    c.out_time = datetime.now()
+    c.out_time = datetime.utcnow()
     rec = _record(db, c, "OUT", req.truck_no, req.driver, req.gate, "OK",
                   f"提箱单 {req.pickup_no}，释放堆位 {pos_code}")
     db.commit()

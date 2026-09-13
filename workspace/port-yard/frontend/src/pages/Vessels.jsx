@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
+import { fmt, toUTCISO } from '../utils'
 
-const fmt = (s) => (s ? new Date(s).toLocaleString('zh-CN', { hour12: false }) : '-')
 const STATUS = { SCHEDULED: '计划中', BERTHED: '已靠泊', DEPARTED: '已离港' }
 const toLocal = (s) => (s ? s.slice(0, 16) : '')
 
@@ -17,7 +17,7 @@ export default function Vessels() {
     e.preventDefault()
     setMsg('')
     try {
-      await api.post('/vessels', form)
+      await api.post('/vessels', { ...form, eta: toUTCISO(form.eta), etd: toUTCISO(form.etd) })
       setForm({ vessel_name: '', voyage: '', eta: '', etd: '' })
       setMsg('✅ 船期已添加')
       load()

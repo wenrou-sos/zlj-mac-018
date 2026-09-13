@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
+import { fmt } from '../utils'
 
-const fmt = (s) => (s ? new Date(s).toLocaleString('zh-CN', { hour12: false }) : '-')
 const STATUS = { BOOKED: '已预约', IN_YARD: '在场', OUT: '已出场' }
 
 export default function Containers() {

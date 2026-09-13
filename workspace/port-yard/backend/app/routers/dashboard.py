@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api/dashboard", tags=["看板"])
 
 @router.get("")
 def dashboard(db: Session = Depends(get_db)):
-    now = datetime.now()
+    now = datetime.utcnow()
     in_yard = db.query(Container).filter(Container.status == ContainerStatus.IN_YARD.value).all()
     overdue = [c for c in in_yard if c.in_time and now > c.in_time + timedelta(days=c.free_days)]
     total_pos = db.query(func.count(YardPosition.id)).scalar()
@@ -36,6 +36,6 @@ def dashboard(db: Session = Depends(get_db)):
         "yard_rate": round(used_pos / total_pos * 100, 1) if total_pos else 0,
         "today_in": today_in,
         "today_out": today_out,
-        "pending_appointments": len(pending_appts),
+        "pending_appointments": len(pending_appts) - len(expired_appts),
         "expired_appointments": len(expired_appts),
     }

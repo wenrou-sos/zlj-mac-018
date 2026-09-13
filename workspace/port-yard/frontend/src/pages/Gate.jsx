@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
+import { fmt } from '../utils'
 
-const fmt = (s) => (s ? new Date(s).toLocaleString('zh-CN', { hour12: false }) : '-')
 
 export default function Gate() {
   const [inForm, setInForm] = useState({ container_no: '', truck_no: '', driver: '', gate: 'G1' })

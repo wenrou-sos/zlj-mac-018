@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
+import { fmt, fmtShort, toUTCISO, toLocalInput } from '../utils'
 
-const fmt = (s) => (s ? new Date(s).toLocaleString('zh-CN', { hour12: false }) : '-')
-const fmtShort = (s) => (s ? new Date(s).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: false }) : '-')
 const STATUS = { PENDING: '待进场', COMPLETED: '已完成', CANCELLED: '已取消' }
 const TABS = [
   { key: '', label: '全部' },
@@ -36,6 +35,7 @@ export default function Appointments() {
     try {
       await api.post('/appointments', {
         ...form,
+        planned_time: toUTCISO(form.planned_time),
         vessel_id: form.vessel_id ? Number(form.vessel_id) : null,
         tolerance_hours: Number(form.tolerance_hours),
       })
@@ -53,7 +53,7 @@ export default function Appointments() {
   const doReschedule = async () => {
     try {
       await api.patch(`/appointments/${resched.id}/reschedule`, {
-        planned_time: resched.planned_time,
+        planned_time: toUTCISO(resched.planned_time),
         tolerance_hours: Number(resched.tolerance_hours),
       })
       setResched(null)
@@ -118,7 +118,7 @@ export default function Appointments() {
                   ) : (
                     <>
                       <button className="btn-sm" onClick={() => setResched({
-                        id: a.id, planned_time: a.planned_time.slice(0, 16),
+                        id: a.id, planned_time: toLocalInput(a.planned_time),
                         tolerance_hours: a.tolerance_hours,
                       })}>改期</button>{' '}
                       <button className="btn-sm" onClick={() => cancel(a)}>取消预约</button>

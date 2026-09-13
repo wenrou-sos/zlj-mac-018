@@ -20,7 +20,7 @@ def window(a: Appointment):
 def is_expired(a: Appointment, now: Optional[datetime] = None) -> bool:
     if a.status != "PENDING":
         return False
-    now = now or datetime.now()
+    now = now or datetime.utcnow()
     return now > window(a)[1]
 
 
@@ -58,7 +58,7 @@ def create_appointment(data: AppointmentIn, db: Session = Depends(get_db)):
         Appointment.container_no == no, Appointment.status == "PENDING").first()
     if dup:
         raise HTTPException(409, "该箱已有待进场预约，请先改期或取消")
-    if data.planned_time + timedelta(hours=data.tolerance_hours) <= datetime.now():
+    if data.planned_time + timedelta(hours=data.tolerance_hours) <= datetime.utcnow():
         raise HTTPException(400, "预约时段已过期，请选择未来的计划时间")
     if data.vessel_id and not db.get(Vessel, data.vessel_id):
         raise HTTPException(404, "船期不存在")
@@ -87,7 +87,7 @@ def reschedule_appointment(appt_id: int, data: RescheduleIn, db: Session = Depen
     tol = data.tolerance_hours if data.tolerance_hours is not None else a.tolerance_hours
     if tol < 1 or tol > 24:
         raise HTTPException(400, "容差应在 1~24 小时之间")
-    if data.planned_time + timedelta(hours=tol) <= datetime.now():
+    if data.planned_time + timedelta(hours=tol) <= datetime.utcnow():
         raise HTTPException(400, "新时段已过期，请选择未来的计划时间")
     a.planned_time = data.planned_time
     a.tolerance_hours = tol

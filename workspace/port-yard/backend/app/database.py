@@ -17,3 +17,16 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def run_migrations():
+    """轻量迁移: 旧库缺列时自动补齐 (SQLite/PostgreSQL 通用)"""
+    from sqlalchemy import inspect, text
+    insp = inspect(engine)
+    if "appointments" in insp.get_table_names():
+        cols = {c["name"] for c in insp.get_columns("appointments")}
+        if "tolerance_hours" not in cols:
+            with engine.begin() as conn:
+                conn.execute(text(
+                    "ALTER TABLE appointments ADD COLUMN tolerance_hours INTEGER DEFAULT 2"))
+            print("🔧 迁移: appointments 表补充 tolerance_hours 列")
