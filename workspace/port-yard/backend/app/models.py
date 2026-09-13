@@ -82,12 +82,13 @@ class GateRecord(Base):
 
 
 class Appointment(Base):
-    """进场预约"""
+    """进场预约: 计划时间 ± 容差 构成到场时段"""
     __tablename__ = "appointments"
     id = Column(Integer, primary_key=True)
     container_no = Column(String(11), nullable=False, index=True)
     vessel_id = Column(Integer, ForeignKey("vessels.id"), nullable=True)
     planned_time = Column(DateTime, nullable=False)
+    tolerance_hours = Column(Integer, default=2)   # 到场容差(小时)
     truck_no = Column(String(16), default="")
     status = Column(String(16), default="PENDING")  # PENDING/COMPLETED/CANCELLED
     created_at = Column(DateTime, default=datetime.now)

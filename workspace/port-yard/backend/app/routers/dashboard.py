@@ -22,6 +22,9 @@ def dashboard(db: Session = Depends(get_db)):
     today_out = db.query(func.count(GateRecord.id)).filter(
         GateRecord.direction == "OUT", GateRecord.result == "OK",
         GateRecord.time >= now.replace(hour=0, minute=0, second=0)).scalar()
+    pending_appts = db.query(Appointment).filter(Appointment.status == "PENDING").all()
+    expired_appts = [a for a in pending_appts
+                     if now > a.planned_time + timedelta(hours=a.tolerance_hours)]
     return {
         "in_yard": len(in_yard),
         "overdue": len(overdue),
@@ -33,6 +36,6 @@ def dashboard(db: Session = Depends(get_db)):
         "yard_rate": round(used_pos / total_pos * 100, 1) if total_pos else 0,
         "today_in": today_in,
         "today_out": today_out,
-        "pending_appointments": db.query(func.count(Appointment.id)).filter(
-            Appointment.status == "PENDING").scalar(),
+        "pending_appointments": len(pending_appts),
+        "expired_appointments": len(expired_appts),
     }

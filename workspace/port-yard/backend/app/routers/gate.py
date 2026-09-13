@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 
 from ..database import get_db
@@ -31,7 +31,7 @@ def gate_in(req: GateInRequest, db: Session = Depends(get_db)):
     if c.status == ContainerStatus.OUT.value:
         raise HTTPException(400, "该箱已出场，如需再次进场请重新预约")
 
-    # 预约校验
+    # 预约校验: 存在 PENDING 预约且当前在到场时段内
     appt = db.query(Appointment).filter(
         Appointment.container_no == no, Appointment.status == "PENDING"
     ).order_by(Appointment.planned_time).first()
@@ -39,6 +39,21 @@ def gate_in(req: GateInRequest, db: Session = Depends(get_db)):
         _record(db, c, "IN", req.truck_no, req.driver, req.gate, "REJECTED", "无有效进场预约")
         db.commit()
         raise HTTPException(403, "进闸拒绝：无有效进场预约")
+
+    now = datetime.now()
+    win_start = appt.planned_time - timedelta(hours=appt.tolerance_hours)
+    win_end = appt.planned_time + timedelta(hours=appt.tolerance_hours)
+    fmt = "%m-%d %H:%M"
+    if now < win_start:
+        remark = f"未到预约时段(时段 {win_start.strftime(fmt)}~{win_end.strftime(fmt)})"
+        _record(db, c, "IN", req.truck_no, req.driver, req.gate, "REJECTED", remark)
+        db.commit()
+        raise HTTPException(403, f"进闸拒绝：{remark}")
+    if now > win_end:
+        remark = f"已过预约时段(时段 {win_start.strftime(fmt)}~{win_end.strftime(fmt)})，请改期后重新进场"
+        _record(db, c, "IN", req.truck_no, req.driver, req.gate, "REJECTED", remark)
+        db.commit()
+        raise HTTPException(403, f"进闸拒绝：{remark}")
 
     # 堆位: 已有预分配则沿用，否则自动分配
     if c.position_id:

@@ -59,7 +59,13 @@ class AppointmentIn(BaseModel):
     container_no: str
     vessel_id: Optional[int] = None
     planned_time: datetime
+    tolerance_hours: int = 2
     truck_no: str = ""
+
+
+class RescheduleIn(BaseModel):
+    planned_time: datetime
+    tolerance_hours: Optional[int] = None
 
 
 class AppointmentOut(BaseModel):
@@ -67,9 +73,13 @@ class AppointmentOut(BaseModel):
     container_no: str
     vessel_id: Optional[int]
     planned_time: datetime
+    tolerance_hours: int
     truck_no: str
     status: str
     created_at: datetime
+    window_start: Optional[datetime] = None
+    window_end: Optional[datetime] = None
+    is_expired: bool = False
     class Config:
         from_attributes = True
 

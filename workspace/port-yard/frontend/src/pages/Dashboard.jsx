@@ -6,10 +6,12 @@ const fmt = (s) => (s ? new Date(s).toLocaleString('zh-CN', { hour12: false }) :
 export default function Dashboard() {
   const [stats, setStats] = useState(null)
   const [overdue, setOverdue] = useState([])
+  const [expiredAppts, setExpiredAppts] = useState([])
 
   const load = () => {
     api.get('/dashboard').then(setStats).catch(alert)
     api.get('/containers/overdue').then(setOverdue).catch(alert)
+    api.get('/appointments?status=PENDING&expired=true').then(setExpiredAppts).catch(alert)
   }
   useEffect(load, [])
 
@@ -18,6 +20,7 @@ export default function Dashboard() {
     { label: '在场箱量', value: stats.in_yard, cls: 'blue' },
     { label: '超期箱', value: stats.overdue, cls: stats.overdue ? 'red' : '' },
     { label: '待进场预约', value: stats.pending_appointments, cls: 'orange' },
+    { label: '过期预约', value: stats.expired_appointments, cls: stats.expired_appointments ? 'red' : '' },
     { label: '在港船舶', value: stats.vessels_active, cls: 'blue' },
     { label: '堆场利用率', value: stats.yard_rate + '%', cls: stats.yard_rate > 85 ? 'red' : 'green' },
     { label: '今日进/出闸', value: `${stats.today_in} / ${stats.today_out}`, cls: '' },
@@ -33,6 +36,25 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+
+      <h3>⏰ 过期预约（已过预约时段未进场，需改期或取消）</h3>
+      {expiredAppts.length === 0 ? <p className="muted">暂无过期预约</p> : (
+        <table>
+          <thead>
+            <tr><th>箱号</th><th>计划时间</th><th>到场时段</th><th>车牌</th></tr>
+          </thead>
+          <tbody>
+            {expiredAppts.map((a) => (
+              <tr key={a.id} className="row-red">
+                <td className="mono">{a.container_no}</td>
+                <td>{fmt(a.planned_time)}</td>
+                <td>{fmt(a.window_start)} ~ {fmt(a.window_end)}</td>
+                <td>{a.truck_no}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
 
       <h3>⚠️ 超期箱提醒（在场超过免堆存期）</h3>
       {overdue.length === 0 ? <p className="muted">暂无超期箱</p> : (

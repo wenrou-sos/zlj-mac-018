@@ -90,11 +90,13 @@ def seed():
                           driver="赵磊", gate="G1", time=c.out_time, result="OK",
                           remark="提箱单 PK202609001"))
 
-    # 7 个已预约未进场 + 对应预约单
-    for i, c in enumerate(containers[33:]):
+    # 7 个已预约未进场 + 对应预约单 (含 2 个已过预约时段, 1 个即将到场)
+    offsets = [-8, -3, 0.5, 3, 8, 24, 40]   # 小时; 负数=已过期
+    for c, hours in zip(containers[33:], offsets):
         db.add(Appointment(
             container_no=c.container_no, vessel_id=c.vessel_id,
-            planned_time=now + timedelta(hours=random.randint(2, 48)),
+            planned_time=now + timedelta(hours=hours),
+            tolerance_hours=random.choice([1, 2, 3]),
             truck_no=f"沪C{random.randint(10000, 99999)}",
         ))
 
