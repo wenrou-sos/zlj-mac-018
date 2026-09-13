@@ -149,6 +149,25 @@ class YardPositionOut(BaseModel):
         from_attributes = True
 
 
+class MoveRequest(BaseModel):
+    container_no: str
+    block: Optional[str] = None        # 指定目标区
+    position_id: Optional[int] = None  # 或指定确切空位(优先)
+    reason: str = ""
+
+
+class MoveRecordOut(BaseModel):
+    id: int
+    container_id: int
+    container_no: str = ""
+    from_code: str
+    to_code: str
+    reason: str
+    time: datetime
+    class Config:
+        from_attributes = True
+
+
 CONTAINER_NO_RE = re.compile(r"^[A-Z]{4}\d{7}$")
 
 

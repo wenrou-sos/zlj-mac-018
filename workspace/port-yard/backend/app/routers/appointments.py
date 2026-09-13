@@ -67,8 +67,11 @@ def create_appointment(data: AppointmentIn, db: Session = Depends(get_db)):
     if not c:
         c = Container(container_no=no, vessel_id=data.vessel_id)
         db.add(c)
-    elif data.vessel_id and not c.vessel_id:
-        c.vessel_id = data.vessel_id
+    else:
+        if c.status == "IN_YARD":
+            raise HTTPException(400, "该箱已在场内，无需预约进场")
+        if data.vessel_id and not c.vessel_id:
+            c.vessel_id = data.vessel_id
     appt = Appointment(**{**data.model_dump(), "container_no": no})
     db.add(appt)
     db.commit()

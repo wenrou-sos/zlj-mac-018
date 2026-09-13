@@ -65,4 +65,10 @@ th { background: #f8fafc; font-weight: 600; color: #475569; }
 .bay-cells { display: grid; grid-template-columns: repeat(4, 44px); gap: 4px; }
 .cell { width: 44px; height: 28px; border-radius: 4px; font-size: 10px; display: flex; align-items: center; justify-content: center; color: #fff; }
 .cell.free { background: #d1fae5; }
-.cell.used { background: #3b82f6; font-family: ui-monospace, monospace; }
+.cell.used { background: #3b82f6; font-family: ui-monospace, monospace; cursor: pointer; }
+.cell.used:hover { background: #1d4ed8; }
+.cell.sel { outline: 3px solid #f59e0b; }
+
+.move-panel { margin-top: 16px; }
+.move-panel h3 { margin-top: 0; }
+.info-row { display: flex; gap: 18px; flex-wrap: wrap; font-size: 14px; margin-bottom: 12px; align-items: center; }

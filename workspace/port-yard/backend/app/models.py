@@ -81,6 +81,19 @@ class GateRecord(Base):
     container = relationship("Container", back_populates="gate_records")
 
 
+class MoveRecord(Base):
+    """移箱记录: 场内堆位变更可追溯"""
+    __tablename__ = "move_records"
+    id = Column(Integer, primary_key=True)
+    container_id = Column(Integer, ForeignKey("containers.id"), nullable=False)
+    from_code = Column(String(8), nullable=False)   # 原堆位
+    to_code = Column(String(8), nullable=False)     # 新堆位
+    reason = Column(String(128), default="")
+    time = Column(DateTime, default=datetime.utcnow)
+
+    container = relationship("Container")
+
+
 class Appointment(Base):
     """进场预约: 计划时间 ± 容差 构成到场时段"""
     __tablename__ = "appointments"

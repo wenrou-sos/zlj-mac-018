@@ -28,8 +28,7 @@ def gate_in(req: GateInRequest, db: Session = Depends(get_db)):
         raise HTTPException(404, "箱号未登记，请先创建集装箱档案")
     if c.status == ContainerStatus.IN_YARD.value:
         raise HTTPException(400, "该箱已在场内")
-    if c.status == ContainerStatus.OUT.value:
-        raise HTTPException(400, "该箱已出场，如需再次进场请重新预约")
+    # 已出场箱可凭有效预约再次进场(回场)，由下方预约校验把关
 
     # 预约校验: 存在 PENDING 预约且当前在到场时段内
     appt = db.query(Appointment).filter(
@@ -76,6 +75,7 @@ def gate_in(req: GateInRequest, db: Session = Depends(get_db)):
         c.position_id = pos.id
     c.status = ContainerStatus.IN_YARD.value
     c.in_time = datetime.utcnow()
+    c.out_time = None  # 回场场景: 清空上次出场时间
     appt.status = "COMPLETED"
     rec = _record(db, c, "IN", req.truck_no, req.driver, req.gate, "OK",
                   f"分配堆位 {pos.code}")
